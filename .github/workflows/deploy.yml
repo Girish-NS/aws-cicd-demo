@@ -13,15 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure SSH
+            - name: Configure SSH
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_key
-          chmod 600 ~/.ssh/ec2_key
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          set -e
+          echo "Creating SSH directory..."
+          mkdir -p "$HOME/.ssh"
+
+          echo "Writing private key..."
+          printf '%s\n' "$EC2_SSH_KEY" > "$HOME/.ssh/ec2_key"
+          chmod 600 "$HOME/.ssh/ec2_key"
+
+          echo "Checking EC2 host..."
+          ssh-keyscan -T 10 -H "$EC2_HOST" >> "$HOME/.ssh/known_hosts"
+          echo "SSH configuration completed."
 
       - name: Copy website to EC2
         run: |
